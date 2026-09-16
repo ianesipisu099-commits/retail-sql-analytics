@@ -27,9 +27,12 @@ The analysis focused on the following questions:
 
 ## Dataset
 
-**Source:** Brazilian E-Commerce Public Dataset by Olist
+**Source:** [Brazilian E-Commerce Public Dataset by Olist](https://www.kaggle.com/olistbr/brazilian-ecommerce)
 
-The dataset contains anonymized information about approximately 100,000 orders placed between 2016 and 2018.
+**Provider:** Olist  
+**License:** CC BY-NC-SA 4.0
+
+The dataset contains anonymized information about approximately 100,000 orders placed between 2016 and 2018 across multiple marketplaces in Brazil.
 
 Core tables used in this analysis:
 
