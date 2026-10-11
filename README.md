@@ -2,228 +2,244 @@
 
 ## Project Overview
 
-This project analyzes approximately 100,000 e-commerce orders from the Brazilian marketplace Olist using PostgreSQL.
+This project analyzes the Brazilian E-Commerce Public Dataset by Olist using PostgreSQL to explore sales performance, product-category contributions, and customer purchasing behavior.
 
-The objective was to build a relational database from raw CSV files and use SQL to investigate sales performance, product-category performance, customer purchasing behavior, and customer value.
+The analysis covers **99,441 orders** and demonstrates how SQL can transform relational transaction data into actionable business insights.
 
-The project progresses from database design and data validation to multi-table analysis, window functions, and RFM-style customer segmentation.
-
----
+The project includes database design, data validation, multi-table joins, aggregations, Common Table Expressions (CTEs), window functions, and Recency, Frequency, Monetary (RFM) customer segmentation.
 
 ## Business Questions
 
-The analysis focused on the following questions:
+The project investigates:
 
-1. How much product-sales revenue was generated?
-2. What was the average order value?
-3. How did revenue change over time?
-4. Which product categories generated the most revenue?
-5. How concentrated was revenue across product categories?
-6. What proportion of customers made repeat purchases?
-7. Who were the highest-value customers?
-8. How can customers be segmented using recency, frequency, and monetary value?
-
----
+1. What is the total recorded product value, and how much is associated with delivered orders?
+2. What is the average order value?
+3. Which months generated the highest delivered-order product value?
+4. Which product categories contributed most to sales?
+5. How concentrated is product value across categories?
+6. How can customers be segmented using purchasing behavior?
+7. Which customer segments have the highest historical value?
+8. What business opportunities emerge from the analysis?
 
 ## Dataset
 
-**Source:** [Brazilian E-Commerce Public Dataset by Olist](https://www.kaggle.com/olistbr/brazilian-ecommerce)
+**Source:** [Brazilian E-Commerce Public Dataset by Olist](https://www.kaggle.com/datasets/olistbr/brazilian-ecommerce)
 
 **Provider:** Olist  
-**License:** CC BY-NC-SA 4.0
+**Database:** PostgreSQL  
+**Database management:** pgAdmin 4
 
-The dataset contains anonymized information about approximately 100,000 orders placed between 2016 and 2018 across multiple marketplaces in Brazil.
+The dataset contains anonymized Brazilian e-commerce transactions from 2016 to 2018.
 
-Core tables used in this analysis:
+### Tables Used
 
-- `customers`
-- `orders`
-- `order_items`
-- `products`
-- `category_translation`
+| Table | Records |
+|---|---:|
+| customers | 99,441 |
+| orders | 99,441 |
+| order_items | 112,650 |
+| products | 32,951 |
+| category_translation | Not separately counted |
 
-The relational structure used for the analysis was:
+### Database Relationships
+
+The main relational structure is:
 
 `customers → orders → order_items → products`
 
-Product category names were translated using the category translation table.
-
----
-
-## Database Structure
-
-The raw CSV files were imported into PostgreSQL and relationships were established using primary and foreign keys.
+The `category_translation` table provides English category names.
 
 ![Database Tables](screenshots/01_database_tables.png)
 
-Key relationships include:
+## Data Validation
 
-- `customers.customer_id → orders.customer_id`
-- `orders.order_id → order_items.order_id`
-- `products.product_id → order_items.product_id`
+Before conducting the analysis, SQL queries were used to check database completeness and relational consistency.
 
----
+The validation confirmed:
 
-## Tools & SQL Skills
+- All 99,441 order IDs were unique.
+- All 112,650 order-item records matched an existing order.
+- All 112,650 order-item records linked to a valid customer.
+- 98,666 orders contained at least one order-item record.
+- 96,478 orders had a delivered status.
 
-**Database:** PostgreSQL  
-**Database Management:** pgAdmin 4
+These checks helped prevent duplicate counting and identify differences between recorded orders and orders containing items.
 
-SQL techniques demonstrated:
+## Tools and SQL Techniques
+
+**Tools:** PostgreSQL, pgAdmin 4, GitHub
+
+**SQL techniques demonstrated:**
 
 - Relational database design
 - Primary and foreign keys
-- `SELECT`, `WHERE`, `GROUP BY`, `ORDER BY`
-- Aggregate functions
-- Multi-table `JOIN`s
-- Subqueries
+- SELECT, WHERE, GROUP BY, ORDER BY
+- Aggregate functions: SUM, AVG, COUNT
+- INNER JOIN and LEFT JOIN
+- Subqueries and derived tables
 - Common Table Expressions (CTEs)
-- `CASE WHEN`
-- Date functions
-- Window functions
-- `RANK()`
-- `NTILE()`
+- CASE expressions
+- COALESCE and NULLIF
+- Date functions and DATE_TRUNC
+- Window functions: RANK, NTILE
 - Percentage-of-total calculations
-- RFM-style customer segmentation
-
----
+- RFM customer segmentation
 
 ## Sales Analysis
 
-Total product-sales revenue in the dataset was:
+Product value was calculated using item prices, excluding freight charges.
 
-**13,591,643.70**
+Two measures were distinguished:
 
-Average order value was:
+| KPI | Value |
+|---|---:|
+| Total recorded product value | R$13,591,643.70 |
+| Delivered-order product value | R$13,221,498.11 |
+| Average order value — all orders with items | R$137.75 |
+| Average order value — delivered orders | R$137.04 |
+| Delivered orders | 96,478 |
 
-**137.75**
+Delivered-order product value was used as the primary fulfilled-sales proxy. It should not be interpreted as verified accounting revenue.
 
-Monthly sales analysis covered September 2016 through September 2018.
+### Top 5 Sales Months
 
-November 2017 recorded the highest product-sales revenue at approximately:
+Months are based on the original purchase date of orders subsequently marked as delivered.
 
-**1,010,271.37**
+| Rank | Month | Product Value |
+|---|---|---:|
+| 1 | November 2017 | R$987,765.37 |
+| 2 | May 2018 | R$977,544.69 |
+| 3 | April 2018 | R$973,534.09 |
+| 4 | March 2018 | R$953,356.25 |
+| 5 | January 2018 | R$924,645.00 |
 
-![Top Revenue Months](screenshots/02_monthly_revenue.png)
+![Monthly Sales Analysis](screenshots/02_monthly_revenue.png)
 
-The first and final months represent partial periods and should therefore be interpreted cautiously when comparing monthly performance.
+**Finding:** November 2017 recorded the highest delivered-order product value, at approximately R$987,765.
 
----
+Four of the five highest-performing months occurred in 2018. However, this ranking alone does not establish consistent month-over-month growth.
 
 ## Product Category Analysis
 
-Product categories were analyzed by number of items sold, order count, total product-sales revenue, average item price, revenue ranking, and share of categorized revenue.
+Product categories were evaluated using delivered-order product value, item counts, category rankings, and percentage contributions.
 
-The highest-revenue categories included:
-
-| Category | Revenue | Revenue Share |
+| Category | Product Value | Share |
 |---|---:|---:|
-| Health & Beauty | 1,258,681.34 | 9.39% |
-| Watches & Gifts | 1,205,005.68 | 8.99% |
-| Bed, Bath & Table | 1,036,988.68 | 7.73% |
-| Sports & Leisure | 988,048.97 | 7.37% |
-| Computers & Accessories | 911,954.32 | 6.80% |
+| Health & Beauty | R$1,233,131.72 | 9.33% |
+| Watches & Gifts | R$1,166,176.98 | 8.82% |
+| Bed, Bath & Table | R$1,023,434.76 | 7.74% |
+| Sports & Leisure | R$954,852.55 | 7.22% |
+| Computers & Accessories | R$888,724.61 | 6.72% |
 
-![Category Analysis](screenshots/03_category_analysis.png)
+![Product Category Analysis](screenshots/03_category_analysis.png)
 
-### Finding
+### Key Findings
 
-Health & Beauty generated the highest category revenue.
+**Health & Beauty** generated the highest product value, accounting for approximately 9.33% of analyzed category value.
 
-However, Bed, Bath & Table sold more items than Health & Beauty and Watches & Gifts. Watches & Gifts generated comparatively high revenue with fewer items because its average item price was substantially higher.
+**Watches & Gifts** generated substantial product value despite selling fewer items than Health & Beauty, suggesting a higher average item price.
 
-Revenue was also distributed across several categories rather than being dominated by a single category.
+**Bed, Bath & Table** recorded the highest item count among the top five categories, demonstrating that high sales volume does not necessarily produce the highest product value.
 
----
+The top five categories accounted for approximately **39.83%** of analyzed category product value.
 
-## Customer Behavior
+## Customer RFM Segmentation
 
-Customer analysis used `customer_unique_id` to identify customers across orders.
+Customers were identified using `customer_unique_id` and classified according to three dimensions:
 
-The analysis found:
+**Recency (R):** Days since the customer's most recent purchase, measured relative to the latest purchase date among delivered orders.
 
-- **93,099 one-time customers**
-- **2,997 repeat customers**
-- **96.88% one-time customers**
-- **3.12% repeat customers**
+**Frequency (F):** Number of distinct delivered orders associated with the customer.
 
-This indicates low observed repeat-purchase behavior during the available dataset period.
+**Monetary (M):** Total product value associated with delivered orders.
 
-Because the dataset covers a finite historical period, this should not be interpreted as a complete measure of long-term customer retention.
+Recency and monetary values were scored using `NTILE(5)`, while frequency was scored according to actual purchase counts.
 
----
+Customers were classified into six analyst-defined segments.
 
-## RFM Customer Segmentation
+### Segmentation Results
 
-Customers were analyzed using three dimensions:
-
-**Recency** — days since the customer's most recent purchase relative to the final transaction date in the dataset.
-
-**Frequency** — number of distinct orders placed by the customer.
-
-**Monetary Value** — total product-sales value associated with the customer.
-
-Because the overwhelming majority of customers placed only one order, frequency was not divided mechanically into quintiles. Instead, frequency scores were assigned according to actual purchase counts to avoid misleading scores among tied customers.
-
-Customers were then grouped into analyst-defined segments.
-
-| Segment | Customers | Product Sales | Avg. Customer Value | Customer Share |
+| Segment | Customers | Product Value | Avg. Customer Value | Share |
 |---|---:|---:|---:|---:|
-| Recent Customers | 36,917 | 5,205,959.97 | 141.02 | 38.69% |
-| At Risk - High Value | 14,792 | 4,160,192.89 | 281.25 | 15.50% |
-| Potential Customers | 18,453 | 2,413,602.94 | 130.80 | 19.34% |
-| Inactive Customers | 23,376 | 1,310,369.26 | 56.06 | 24.50% |
-| Champions | 966 | 315,971.76 | 327.09 | 1.01% |
-| Loyal Customers | 916 | 185,546.88 | 202.56 | 0.96% |
+| Recent Customers | 36,140 | R$5,071,407.73 | R$140.33 | 38.71% |
+| At Risk – High Value | 14,537 | R$4,050,384.50 | R$278.63 | 15.57% |
+| Potential Customers | 18,069 | R$2,343,910.03 | R$129.72 | 19.35% |
+| Inactive Customers | 22,807 | R$1,276,077.61 | R$55.95 | 24.43% |
+| Champions | 932 | R$305,370.50 | R$327.65 | 1.00% |
+| Loyal Customers | 873 | R$174,347.74 | R$199.71 | 0.94% |
+
+**Total customers analyzed:** 93,358
 
 ![Customer Segmentation](screenshots/04_customer_segments.png)
 
-### Finding
+### Key Findings
 
-The **At Risk - High Value** segment represented only 15.50% of customers but accounted for approximately 4.16 million in historical product sales.
+**Recent Customers** formed the largest segment, representing 38.71% of analyzed customers.
 
-The **Champions** segment represented just 1.01% of customers but recorded the highest average customer value at 327.09.
+**At Risk – High Value** customers accounted for 15.57% of customers but contributed approximately R$4.05 million in historical product value. This makes them a potentially important group for re-engagement.
 
-Inactive customers represented 24.50% of customers but had substantially lower average customer value.
+**Champions** represented only 1.00% of customers but recorded the highest average customer value, at R$327.65.
 
----
+**Inactive Customers** represented 24.43% of customers and had a relatively low average historical value of R$55.95.
+
+These segments are descriptive classifications based on historical transactions, not predictions of future purchasing behavior.
 
 ## Business Recommendations
 
-Based on the analysis:
+### 1. Prioritize high-value customer retention
 
-1. **Prioritize high-value customer reactivation.**  
-   Customers classified as At Risk - High Value have substantial historical value and may warrant targeted re-engagement efforts.
+The At Risk – High Value segment has substantial historical purchasing value. Targeted re-engagement campaigns could be tested to determine whether these customers can be encouraged to purchase again.
 
-2. **Develop repeat-purchase strategies.**  
-   Only 3.12% of observed customers made repeat purchases during the dataset period, suggesting an opportunity to investigate retention and second-purchase conversion.
+### 2. Strengthen relationships with valuable customers
 
-3. **Protect high-value customer relationships.**  
-   Champions represent a small customer group but have the highest average customer value.
+Champions have the highest average customer value. Loyalty benefits and personalized communication could help maintain these relationships.
 
-4. **Consider both volume and pricing in category strategy.**  
-   High category revenue can result from high sales volume, higher average item prices, or a combination of both.
+### 3. Investigate product-category opportunities
 
----
+Health & Beauty and Watches & Gifts are major contributors to delivered-order product value. Their performance warrants further investigation into pricing, product mix, and sales volume.
+
+### 4. Monitor monthly sales performance
+
+Monthly product-value analysis can help identify seasonal patterns and inform planning. Further analysis would be required to distinguish seasonality from general market growth.
+
+## Methodology and Limitations
+
+- The analysis uses historical transactions from 2016–2018 and does not represent current marketplace performance.
+- Delivered-order product value is used as a proxy for fulfilled sales, not verified revenue recognition.
+- Freight charges are excluded from product-value calculations.
+- The monthly analysis groups delivered orders by purchase month, not delivery month.
+- The first and final months may represent incomplete reporting periods.
+- RFM segments are based on analyst-defined scoring thresholds.
+- Customers with identical recency or monetary values may receive different NTILE scores at quintile boundaries.
+- Category revenue shares depend on successful matching between order items and product records.
+- Repeat-purchase rates should be recalculated using the delivered-order population before being included in the final findings.
+
+## Reproducing the Analysis
+
+1. Download the Olist dataset from the source linked above.
+2. Create a PostgreSQL database.
+3. Execute `01_database_setup.sql` to create the five tables.
+4. Import the corresponding CSV files into PostgreSQL, matching CSV columns to the database schema.
+5. Run `02_sales_analysis.sql` to examine sales performance.
+6. Run `03_product_analysis.sql` to analyze product categories.
+7. Run `04_customer_segmentation.sql` to calculate customer RFM segments.
+
+The SQL scripts are intended to be executed in numerical order. Database setup is required only once.
 
 ## Project Structure
 
 ```text
-Retail-SQL-Analytics/
-│
+retail-sql-analytics/
 ├── README.md
-│
 ├── sql/
 │   ├── 01_database_setup.sql
 │   ├── 02_sales_analysis.sql
 │   ├── 03_product_analysis.sql
 │   └── 04_customer_segmentation.sql
-│
 └── screenshots/
     ├── 01_database_tables.png
     ├── 02_monthly_revenue.png
     ├── 03_category_analysis.png
-    └── 04_customer_segments.png
     └── 04_customer_segments.png
 ```
 
@@ -232,3 +248,4 @@ Retail-SQL-Analytics/
 **Ian Mark Esipisu**
 
 Data Analytics | SQL | PostgreSQL | Research | Financial Engineering
+
