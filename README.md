@@ -219,7 +219,7 @@ Monthly product-value analysis can help identify seasonal patterns and inform pl
 1. Download the Olist dataset from the source linked above.
 2. Create a PostgreSQL database.
 3. Execute `01_database_setup.sql` to create the five tables.
-4. 4. Import the five CSV files into PostgreSQL in this order:
+4. Import the five CSV files into PostgreSQL in this order:
 
    `customers → orders → products → category_translation → order_items`
 
