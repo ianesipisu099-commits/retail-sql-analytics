@@ -1,8 +1,20 @@
+
 -- =========================================================
 -- Retail Sales & Customer Analytics
--- Database Setup
+-- 01 - Database Setup
 -- Dataset: Brazilian E-Commerce Public Dataset by Olist
+-- Database: PostgreSQL
 -- =========================================================
+
+-- Purpose:
+-- Create the five tables used in the retail analytics project.
+--
+-- Important:
+-- 1. Run this script on a new, empty PostgreSQL database.
+-- 2. Import the corresponding Olist CSV files after
+--    creating the tables.
+-- 3. Import parent tables before dependent tables.
+-- 4. This script does not load the CSV data.
 
 
 -- 1. Customers
@@ -32,25 +44,7 @@ CREATE TABLE orders (
 );
 
 
--- 3. Order Items
-CREATE TABLE order_items (
-    order_id VARCHAR(50),
-    order_item_id INTEGER,
-    product_id VARCHAR(50),
-    seller_id VARCHAR(50),
-    shipping_limit_date TIMESTAMP,
-    price NUMERIC(10,2),
-    freight_value NUMERIC(10,2),
-
-    PRIMARY KEY (order_id, order_item_id),
-
-    CONSTRAINT fk_order
-        FOREIGN KEY (order_id)
-        REFERENCES orders(order_id)
-);
-
-
--- 4. Products
+-- 3. Products
 CREATE TABLE products (
     product_id VARCHAR(50) PRIMARY KEY,
     product_category_name VARCHAR(100),
@@ -64,15 +58,42 @@ CREATE TABLE products (
 );
 
 
--- 5. Product Category Translation
+-- 4. Product Category Translation
 CREATE TABLE category_translation (
     product_category_name VARCHAR(100) PRIMARY KEY,
     product_category_name_english VARCHAR(100)
 );
 
 
--- 6. Product Relationship
-ALTER TABLE order_items
-ADD CONSTRAINT fk_product
-FOREIGN KEY (product_id)
-REFERENCES products(product_id);
+-- 5. Order Items
+CREATE TABLE order_items (
+    order_id VARCHAR(50),
+    order_item_id INTEGER,
+    product_id VARCHAR(50),
+    seller_id VARCHAR(50),
+    shipping_limit_date TIMESTAMP,
+    price NUMERIC(10,2),
+    freight_value NUMERIC(10,2),
+
+    PRIMARY KEY (order_id, order_item_id),
+
+    CONSTRAINT fk_order
+        FOREIGN KEY (order_id)
+        REFERENCES orders(order_id),
+
+    CONSTRAINT fk_product
+        FOREIGN KEY (product_id)
+        REFERENCES products(product_id)
+);
+
+
+-- =========================================================
+-- Import order:
+-- 1. customers
+-- 2. orders
+-- 3. products
+-- 4. category_translation
+-- 5. order_items
+--
+-- CSV import must be performed separately.
+-- =========================================================
