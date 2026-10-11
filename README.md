@@ -4,7 +4,7 @@
 
 This project analyzes the Brazilian E-Commerce Public Dataset by Olist using PostgreSQL to explore sales performance, product-category contributions, and customer purchasing behavior.
 
-The database contains **99,441 orders** of which 96,478 were marked as delivered. The primary sales and customer segmentation analyses focus on delivered orders.This analysis demonstrates how SQL can transform relational transaction data into actionable business insights.
+The database contains **99,441 orders** of which 96,478 were marked as delivered. The primary sales and customer segmentation analyses focus on delivered orders. This analysis demonstrates how SQL can transform relational transaction data into actionable business insights.
 
 The project includes database design, data validation, multi-table joins, aggregations, Common Table Expressions (CTEs), window functions, and Recency, Frequency, Monetary (RFM) customer segmentation.
 
@@ -219,9 +219,11 @@ Monthly product-value analysis can help identify seasonal patterns and inform pl
 1. Download the Olist dataset from the source linked above.
 2. Create a PostgreSQL database.
 3. Execute `01_database_setup.sql` to create the five tables.
-4. Import the five CSV files into PostgreSQL in the following order to respect foreign-key relationships:
-customers → orders → products → category_translation → order_items
-Ensure the CSV columns match the database schema.
+4. 4. Import the five CSV files into PostgreSQL in this order:
+
+   `customers → orders → products → category_translation → order_items`
+
+   Ensure the CSV columns match the database schema.
 5. Run `02_sales_analysis.sql` to examine sales performance.
 6. Run `03_product_analysis.sql` to analyze product categories.
 7. Run `04_customer_segmentation.sql` to calculate customer RFM segments.
